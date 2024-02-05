@@ -1,12 +1,18 @@
-from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-import os
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
-from django.conf import settings
 from .engine import TestEngine
+from pathlib import Path
+from django.http import FileResponse
+
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
+BASE_DIR = Path(__file__).resolve().parent.parent
+MEDIA_ROOT = BASE_DIR / 'media/'
+
+
+
 
 
 class TestAPI(APIView):
@@ -42,9 +48,17 @@ class SDTESTAPI(APIView):
 		prompt = request.data['title']
 		new_engine = TestEngine(prompt)
 		image = new_engine.test_diffusion_pipeline()
-		path = default_storage.save(f'userImage/image{prompt}.png', ContentFile(image.read()))
+		image.save(f'{MEDIA_ROOT}/{prompt}.jpg')
+		image_path = f'{MEDIA_ROOT}/{prompt}.jpg'
+		# return Response("sd post test 성공.", status=status.HTTP_200_OK)
+		return FileResponse(open(image_path, 'rb'), content_type='image/jpg')
 
+
+	def get(self, request):
+		print(request.data['title'])
+		prompt = request.data['title']
+		new_engine = TestEngine(prompt)
+		image = new_engine.test_diffusion_pipeline()
+		image.save(f'{MEDIA_ROOT}/{prompt}.jpg')
 		return Response("sd post test 성공.", status=status.HTTP_200_OK)
-
-
 
